@@ -3,43 +3,47 @@
 cmnd=$1
 plugin=$2
 VERSION=0.2.1
+vimrc_file_path=~/.vimrc
+vimrc_file_temp_path=$vimrc_file_path.tmp
+bundle_dir=~/.vim/bundle
 
 function bundle_install {
   vim +BundleInstall +qall
 }
 
 function remove_plugin_dir {
-  rm -rf ~/.vim/bundle/$plugin
+  rm -rf $bundle_dir/$plugin
 }
 
 function install_plugin {
-  cat ~/.vimrc \
+  cat $vimrc_file_path \
   | perl -pe "s/^\" Plugins$/\" Plugins\nPlugin '$plugin'/" \
-  > ~/.vimrc.new
+  > $vimrc_file_temp_path
 
-  mv ~/.vimrc.new ~/.vimrc
+  mv $vimrc_file_temp_path $vimrc_file_path
 
   bundle_install
 }
 
 function check {
-  if [ ! -e ~/.vimrc ]; then
+  if [ ! -e $vimrc_file_path ]; then
     echo "Your vimrc wasn't found."
+    return
   fi
 }
 
 function remove_plugin {
-  cat ~/.vimrc \
+  cat $vimrc_file_path \
   | perl -pe "s/^\"? ?Plugin '$plugin'\n//" \
-  > ~/.vimrc.new \
-  && mv ~/.vimrc.new ~/.vimrc \
+  > $vimrc_file_temp_path \
+  && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
 
   remove_plugin_dir
 }
 
 function list_plugins {
-  cat ~/.vimrc \
+  cat $vimrc_file_path \
   | grep -oE "^\"? ?Plugin '.*'" \
   | sed "s/\" Plugin /- /" \
   | sed "s/Plugin //" \
@@ -47,20 +51,20 @@ function list_plugins {
 }
 
 function disable_plugin {
-  cat ~/.vimrc \
+  cat $vimrc_file_path \
   | perl -pe "s/^Plugin '$plugin'/\" Plugin '$plugin'/" \
-  > ~/.vimrc.new \
-  && mv ~/.vimrc.new ~/.vimrc \
+  > $vimrc_file_temp_path \
+  && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
 
   remove_plugin_dir
 }
 
 function enable_plugin {
-  cat ~/.vimrc \
+  cat $vimrc_file_path \
   | perl -pe "s/^\" Plugin '$plugin'/Plugin '$plugin'/" \
-  > ~/.vimrc.new \
-  && mv ~/.vimrc.new ~/.vimrc \
+  > $vimrc_file_temp_path \
+  && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
 
   remove_plugin_dir
