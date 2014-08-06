@@ -26,9 +26,29 @@ function install_plugin {
 }
 
 function check {
+  local noerrors=true
   if [ ! -e $vimrc_file_path ]; then
     echo "Your vimrc wasn't found."
-    return
+    noerrors=false
+  fi
+  if [ ! -d $bundle_dir ]; then
+    echo "You don't seem to have a bundle directory. Do you have Vundle installed?"
+    noerrors=false
+  fi
+  hash perl 2> /dev/null || {
+    echo 'Could not find perl.'
+    noerrors=false
+  }
+  hash sed 2> /dev/null || {
+    echo 'Could not find sed.'
+    noerrors=false
+  }
+  hash grep 2> /dev/null || {
+    echo 'Could not find grep.'
+    noerrors=false
+  }
+  if $noerrors; then
+    echo "YAY, no errors"
   fi
 }
 
