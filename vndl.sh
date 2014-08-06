@@ -58,7 +58,7 @@ function check {
 
 function remove_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s|^\"? ?Plugin\\s+'(http.*)?$plugin/?'\\s*\n||" \
+  | perl -pe "s|^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*\n||" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
