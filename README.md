@@ -26,6 +26,10 @@ list installed plugins (lists all rc Plugin entries)
 
 	vndl list
 
-install all currently configured plugins (i.e. BundleInstall)
+download all currently configured plugins (i.e. BundleInstall)
 
 	vndl sync
+
+check that your environment is configured the way vndl expects 
+
+	vndl check
