@@ -33,3 +33,17 @@ download all currently configured plugins (i.e. BundleInstall)
 check that your environment is configured the way vndl expects 
 
 	vndl check
+
+Todo
+----
+
+Add option to install Vundle.
+
+Don't require the '" Plugins' line.
+
+Escape forward slashes in git urls.
+
+Allow management of git plugins by repository name, not url.
+
+Add option to reference plugins by number.
+
