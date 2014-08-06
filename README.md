@@ -20,7 +20,7 @@ disable Command-T (comments out the rc entry)
 
 enable Command-T (uncomments the rc entry)
 
-	vndl enalbe Command-T
+	vndl enable Command-T
 
 list installed plugins (lists all rc Plugin entries)
 
