@@ -18,7 +18,7 @@ function remove_plugin_dir {
 
 function install_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s/^\" Plugins$/\" Plugins\nPlugin '$plugin'/" \
+  | perl -pe "s/^call vundle#end().+$/Plugin '$plugin'\ncall vundle#end()/" \
   > $vimrc_file_temp_path
 
   mv $vimrc_file_temp_path $vimrc_file_path
@@ -44,8 +44,7 @@ function check {
     echo 'Could not find sed.'
     noerrors=false
   }
-  hash grep 2> /dev/null || {
-    echo 'Could not find grep.'
+  hash grep 2> /dev/null || { echo 'Could not find grep.'
     noerrors=false
   }
   if $noerrors; then

@@ -39,8 +39,6 @@ Todo
 
 Add option to install Vundle.
 
-Don't require the '" Plugins' line.
-
 Escape forward slashes in git urls.
 
 Allow management of git plugins by repository name, not url.
