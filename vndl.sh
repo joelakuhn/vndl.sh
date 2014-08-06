@@ -1,11 +1,12 @@
 #!/bin/bash
 
-cmnd=$1
-plugin=$2
 VERSION=0.2.1
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
+
+cmnd=$1
+plugin=$2
 
 function bundle_install {
   vim +BundleInstall +qall
@@ -67,7 +68,8 @@ function list_plugins {
   | grep -oE "^\"? ?Plugin '.*'" \
   | sed "s/\" Plugin /- /" \
   | sed "s/Plugin //" \
-  | sed "s/'//g"
+  | sed "s/'//g" \
+  | nl
 }
 
 function disable_plugin {
@@ -98,6 +100,8 @@ function show_help {
   echo 'vndl list'
   echo 'vndl sync'
   echo 'vndl check'
+  echo 'vndl --version'
+  echo 'vndl --help'
 }
 
 function show_version {
@@ -113,5 +117,6 @@ case $cmnd in
   list|-l)      list_plugins;;
   check|-c)     check;;
   --version)    show_version;;
+  --help|-h)    show_help;;
   '') show_help;;
 esac
