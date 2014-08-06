@@ -17,13 +17,17 @@ function remove_plugin_dir {
 }
 
 function install_plugin {
-  cat $vimrc_file_path \
-  | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
-  > $vimrc_file_temp_path
+  if [ $plugin = 'vundle' ]; then
+    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+  else
+    cat $vimrc_file_path \
+    | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
+    > $vimrc_file_temp_path
 
-  mv $vimrc_file_temp_path $vimrc_file_path
+    mv $vimrc_file_temp_path $vimrc_file_path
 
-  bundle_install
+    bundle_install
+  fi
 }
 
 function check {
@@ -54,7 +58,7 @@ function check {
 
 function remove_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s,^\"? ?Plugin\\s+'(https?://.*)?$plugin/?'\\s*\n,," \
+  | perl -pe "s|^\"? ?Plugin\\s+'(http.*)?$plugin/?'\\s*\n||" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
@@ -73,7 +77,7 @@ function list_plugins {
 
 function disable_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s|^Plugin '$plugin'|\" Plugin '$plugin'|" \
+  | perl -pe "s|^Plugin '((?:http.*/)?$plugin/?)'|\" Plugin '\$1'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
@@ -83,7 +87,7 @@ function disable_plugin {
 
 function enable_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s|^\" Plugin '$plugin'|Plugin '$plugin'|" \
+  | perl -pe "s|^\" Plugin '((?:http.*/)?$plugin/?)'|Plugin '\$1'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
