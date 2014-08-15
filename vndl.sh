@@ -1,15 +1,24 @@
 #!/bin/bash
 
-VERSION=0.2.1
+VERSION=0.3.1
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
+true=0
+false=1
 
 cmnd=$1
 plugin=$2
 
 function bundle_install {
   vim +BundleInstall +qall
+}
+
+function is_installed {
+  cat $vimrc_file_path \
+  | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
+  > /dev/null
+  return $?
 }
 
 function remove_plugin_dir {
@@ -57,6 +66,10 @@ function check {
 }
 
 function remove_plugin {
+  is_installed || {
+    echo "That plugin doesn't seem to be installed."
+  }
+
   cat $vimrc_file_path \
   | perl -pe "s|^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*\n||" \
   > $vimrc_file_temp_path \
@@ -77,7 +90,7 @@ function list_plugins {
 
 function disable_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s|^Plugin '((?:http.*/)?$plugin/?)'|\" Plugin '\$1'|" \
+  | perl -pe "s|^Plugin '((?:http.*/)?.*\\b$plugin/?)'|\" Plugin '\$1'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
@@ -87,7 +100,7 @@ function disable_plugin {
 
 function enable_plugin {
   cat $vimrc_file_path \
-  | perl -pe "s|^\" Plugin '((?:http.*/)?$plugin/?)'|Plugin '\$1'|" \
+  | perl -pe "s|^\" Plugin '((?:http.*/)?.*\\b$plugin/?)'|Plugin '\$1'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
