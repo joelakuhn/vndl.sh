@@ -1,8 +1,8 @@
 #!/bin/sh
 
-VERSION=0.4.3
+VERSION=0.4.4
 vimrc_file_path=~/.vimrc
-vimrc_file_temp_path=$vimrc_file_path.tmp
+vimrc_file_temp_path=$vimrc_file_path.vndl.tmp
 bundle_dir=~/.vim/bundle
 
 function check {
@@ -42,6 +42,21 @@ function is_installed {
   | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
   > /dev/null
   return $?
+}
+
+function move_temp_file {
+  local length_diff=$1
+  local original_length=$(wc -l < $vimrc_file_path | bc)
+  local new_length=$(wc -l < $vimrc_file_temp_path | bc)
+  local expected_length=$(echo "$original_length+$length_diff" | bc)
+  if [[ "$expected_length" = "$new_length" ]]; then
+    mv $vimrc_file_temp_path $vimrc_file_path
+    return $?
+  else
+    echo "The file was a different length than expected."
+    echo "Check $vimrc_file_temp_path to see if it contains what you expected."
+    return 1
+  fi
 }
 
 function unknown_command {
@@ -87,6 +102,7 @@ function resolve_plugin {
 
 function install_plugin {
   local plugin=$1
+  echo installing $plugin
 
   if [ $plugin = 'vundle' ]; then
     git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
@@ -95,7 +111,7 @@ function install_plugin {
     | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
     > $vimrc_file_temp_path
 
-    mv $vimrc_file_temp_path $vimrc_file_path
+    move_temp_file 1
 
     bundle_install
   fi
@@ -104,6 +120,7 @@ function install_plugin {
 function remove_plugin {
   local plugin=$1
   local full_plugin=$(resolve_plugin $plugin)
+  echo removing $full_plugin
 
   is_installed "$full_plugin" || {
     echo "That plugin doesn't seem to be installed."
@@ -112,7 +129,7 @@ function remove_plugin {
   cat $vimrc_file_path \
   | perl -pe "s|^\"? ?Plugin\\s+'$full_plugin'\\s*\n||" \
   > $vimrc_file_temp_path \
-  && mv $vimrc_file_temp_path $vimrc_file_path \
+  && move_temp_file -1 \
   || echo 'could not save changes to plugins'
 
   remove_plugin_dir $full_plugin
@@ -135,7 +152,7 @@ function disable_plugin {
   cat $vimrc_file_path \
   | perl -pe "s|^Plugin\\s+'$full_plugin'|\" Plugin '$full_plugin'|" \
   > $vimrc_file_temp_path \
-  && mv $vimrc_file_temp_path $vimrc_file_path \
+  && move_temp_file 0 \
   || echo 'could not save changes to plugins'
 }
 
@@ -147,7 +164,7 @@ function enable_plugin {
   cat $vimrc_file_path \
   | perl -pe "s|^\" Plugin\\s+'$full_plugin'|Plugin '$full_plugin'|" \
   > $vimrc_file_temp_path \
-  && mv $vimrc_file_temp_path $vimrc_file_path \
+  && move_temp_file 0 \
   || echo 'could not save changes to plugins'
 
   remove_plugin_dir
