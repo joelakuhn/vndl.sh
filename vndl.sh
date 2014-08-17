@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.4.1
+VERSION=0.4.2
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
@@ -191,6 +191,6 @@ case $cmnd in
   list|-l)        list_plugins;;
   check|-c)       check;;
   --version|-v)   show_version;;
-  --help|-h)      show_help;;
+  --help|-h|'')   show_help;;
   *)              unknown_command;;
 esac
