@@ -65,6 +65,24 @@ function unknown_command {
   show_help
 }
 
+function install_vundle {
+  local vundle_bundle_dir="$bundle_dir/Vundle.vim"
+  [ ! -d $vundle_bundle_dir ] &&
+    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
+  grep 'vundle#begin' $vimrc_file_path > /dev/null || {
+    echo "Adding the Vundle bits"
+    cp $vimrc_file_path $vimrc_file_temp_path
+    >> $vimrc_file_temp_path cat <<EOF
+set rtp+=$vundle_bundle_dir
+call vundle#begin()
+call vundle#end()
+EOF
+    move_temp_file 3
+  }
+
+}
+
 function get_directory_name {
   local plugin=$1
 
@@ -105,7 +123,7 @@ function install_plugin {
   echo installing $plugin
 
   if [ $plugin = 'vundle' ]; then
-    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+    install_vundle
   else
     cat $vimrc_file_path \
     | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
@@ -138,7 +156,7 @@ function remove_plugin {
 function list_plugins {
   cat $vimrc_file_path \
   | grep -oE "^\"? ?Plugin '[^']*'" \
-  | sed "s/\" Plugin /- /" \
+  | sed "s/\"\\s*Plugin /- /" \
   | sed "s/Plugin //" \
   | sed "s/'//g" \
   | nl
@@ -162,7 +180,7 @@ function enable_plugin {
   echo enabling $full_plugin
 
   cat $vimrc_file_path \
-  | perl -pe "s|^\" Plugin\\s+'$full_plugin'|Plugin '$full_plugin'|" \
+  | perl -pe "s|^\"\\s*Plugin\\s+'$full_plugin'|Plugin '$full_plugin'|" \
   > $vimrc_file_temp_path \
   && move_temp_file 0 \
   || echo 'could not save changes to plugins'
