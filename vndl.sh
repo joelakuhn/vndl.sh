@@ -4,45 +4,6 @@ VERSION=0.3.1
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
-true=0
-false=1
-
-function bundle_install {
-  vim +BundleInstall +qall
-}
-
-function is_installed {
-  cat $vimrc_file_path \
-  | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
-  > /dev/null
-  return $?
-}
-
-function remove_plugin_dir {
-  rm -rf $bundle_dir/$plugin
-}
-
-function resolve_plugin {
-  local plugin=$1
-  cat $vimrc_file_path \
-  | grep -Eo "^\"? ?Plugin '([^']+/)?$plugin/?'" \
-  | grep -Eo "'.*'" \
-  | grep -Eo "[^']+"
-}
-
-function install_plugin {
-  if [ $plugin = 'vundle' ]; then
-    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-  else
-    cat $vimrc_file_path \
-    | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
-    > $vimrc_file_temp_path
-
-    mv $vimrc_file_temp_path $vimrc_file_path
-
-    bundle_install
-  fi
-}
 
 function check {
   local noerrors=true
@@ -70,23 +31,90 @@ function check {
   fi
 }
 
+function bundle_install {
+  vim +BundleInstall +qall
+}
+
+function is_installed {
+  local plugin=$1
+
+  cat $vimrc_file_path \
+  | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
+  > /dev/null
+  return $?
+}
+
+function get_directory_name {
+  local plugin=$1
+
+  echo $plugin \
+  | grep -Eo '[^/]+$'
+}
+
+function remove_plugin_dir {
+  local plugin=$1
+  local plugin_directory=$(get_directory_name $plugin)
+
+  if [ -n "$plugin_directory" ]; then
+    rm -rf $bundle_dir/$plugin_directory
+  fi
+}
+
+function resolve_plugin {
+  local plugin=$1
+
+  case $plugin in
+    [0-9]*)
+      list_plugins | sed "${plugin}q;d" \
+      | cut -f2 \
+      | sed 's|^- ||'
+      ;;
+    *)
+      cat $vimrc_file_path \
+      | grep -Eo "^\"? ?Plugin '([^']+/)?$plugin/?'" \
+      | grep -Eo "'.*'" \
+      | grep -Eo "[^']+"
+      ;;
+  esac
+
+}
+
+function install_plugin {
+  local plugin=$1
+
+  if [ $plugin = 'vundle' ]; then
+    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+  else
+    cat $vimrc_file_path \
+    | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
+    > $vimrc_file_temp_path
+
+    mv $vimrc_file_temp_path $vimrc_file_path
+
+    bundle_install
+  fi
+}
+
 function remove_plugin {
-  is_installed || {
+  local plugin=$1
+  local full_plugin=$(resolve_plugin $plugin)
+
+  is_installed "$full_plugin" || {
     echo "That plugin doesn't seem to be installed."
   }
 
   cat $vimrc_file_path \
-  | perl -pe "s|^\"? ?Plugin '(?:http.*/)?.*\\b$plugin/?'\\s*\n||" \
+  | perl -pe "s|^\"? ?Plugin\\s+'$full_plugin'\\s*\n||" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
 
-  remove_plugin_dir
+  remove_plugin_dir $full_plugin
 }
 
 function list_plugins {
   cat $vimrc_file_path \
-  | grep -oE "^\"? ?Plugin '.*'" \
+  | grep -oE "^\"? ?Plugin '[^']*'" \
   | sed "s/\" Plugin /- /" \
   | sed "s/Plugin //" \
   | sed "s/'//g" \
@@ -94,18 +122,24 @@ function list_plugins {
 }
 
 function disable_plugin {
+  local plugin=$1
+  local full_plugin=$(resolve_plugin $plugin)
+  echo disabling $full_plugin
+
   cat $vimrc_file_path \
-  | perl -pe "s|^Plugin\\s+'$plugin'|\" Plugin '$plugin'|" \
+  | perl -pe "s|^Plugin\\s+'$full_plugin'|\" Plugin '$full_plugin'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
-
-  remove_plugin_dir
 }
 
 function enable_plugin {
+  local plugin=$1
+  local full_plugin=$(resolve_plugin $plugin)
+  echo enabling $full_plugin
+
   cat $vimrc_file_path \
-  | perl -pe "s|^\" Plugin\\s+'$plugin'|Plugin '$plugin'|" \
+  | perl -pe "s|^\" Plugin\\s+'$full_plugin'|Plugin '$full_plugin'|" \
   > $vimrc_file_temp_path \
   && mv $vimrc_file_temp_path $vimrc_file_path \
   || echo 'could not save changes to plugins'
@@ -130,17 +164,23 @@ function show_version {
 }
 
 cmnd=$1
-plugin=$(resolve_plugin $2)
+
+for arg in "${@:2}"; do
+
+  case $cmnd in
+    install|-i)   install_plugin $arg;;
+    remove|-r)    remove_plugin $arg;;
+    disable|-d)   disable_plugin $arg;;
+    enable|-e)    enable_plugin $arg;;
+    resolve)      resolve_plugin $arg;;
+  esac
+
+done
 
 case $cmnd in
-  install|-i)   install_plugin;;
-  remove|-r)    remove_plugin;;
-  disable|-d)   disable_plugin;;
-  enable|-e)    enable_plugin;;
   sync|-s)      bundle_install;;
   list|-l)      list_plugins;;
   check|-c)     check;;
-  resolve)      resolve_plugin $2;;
   --version)    show_version;;
   --help|-h)    show_help;;
   '') show_help;;
