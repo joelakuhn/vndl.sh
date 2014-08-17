@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.3.1
+VERSION=0.4.1
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
@@ -42,6 +42,12 @@ function is_installed {
   | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
   > /dev/null
   return $?
+}
+
+function unknown_command {
+  echo "$cmnd is not a vndl command"
+  echo
+  show_help
 }
 
 function get_directory_name {
@@ -148,15 +154,18 @@ function enable_plugin {
 }
 
 function show_help {
-  echo 'vndl install plugin'
-  echo 'vndl remove plugin'
-  echo 'vndl disable plugin'
-  echo 'vndl enable plugin'
-  echo 'vndl list'
-  echo 'vndl sync'
-  echo 'vndl check'
-  echo 'vndl --version'
-  echo 'vndl --help'
+  cat <<EOF
+usage: vndl command [plugin]
+  install   -i    installs a plugin
+  remove    -r    remove a plugin
+  disable   -d    comments out a plugin
+  enable    -e    uncomment out a plugin
+  list      -l    list the installed plugins
+  sync      -s    call BundleInstall
+  check     -c    check that things are working properly
+  --version -v    show the version of vndl you're running
+  --help    -h    show this help message
+EOF
 }
 
 function show_version {
@@ -172,16 +181,16 @@ for arg in "${@:2}"; do
     remove|-r)    remove_plugin $arg;;
     disable|-d)   disable_plugin $arg;;
     enable|-e)    enable_plugin $arg;;
-    resolve)      resolve_plugin $arg;;
+    resolve|-x)   resolve_plugin $arg;;
   esac
 
 done
 
 case $cmnd in
-  sync|-s)      bundle_install;;
-  list|-l)      list_plugins;;
-  check|-c)     check;;
-  --version)    show_version;;
-  --help|-h)    show_help;;
-  '') show_help;;
+  sync|-s)        bundle_install;;
+  list|-l)        list_plugins;;
+  check|-c)       check;;
+  --version|-v)   show_version;;
+  --help|-h)      show_help;;
+  *)              unknown_command;;
 esac
