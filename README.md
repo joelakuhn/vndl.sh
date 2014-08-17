@@ -34,10 +34,13 @@ check that your environment is configured the way vndl expects
 
 	vndl check
 
+Install Vundle itself.
+
+  vndl install vundle
+
+All plugins can be referenced by the number next to them when running the list command.
+
+  vndl disable 4 # disables the 4th plugin in your plugins list.
+
 Todo
 ----
-
-Add option to install Vundle.
-
-Add option to reference plugins by number.
-

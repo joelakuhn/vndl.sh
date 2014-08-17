@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=0.4.4
+VERSION=0.4.5
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.vndl.tmp
 bundle_dir=~/.vim/bundle
@@ -71,7 +71,7 @@ function install_vundle {
     git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
   grep 'vundle#begin' $vimrc_file_path > /dev/null || {
-    echo "Adding the Vundle bits"
+    echo "Adding the Vundle bits to your .vimrc"
     cp $vimrc_file_path $vimrc_file_temp_path
     >> $vimrc_file_temp_path cat <<EOF
 set rtp+=$vundle_bundle_dir
