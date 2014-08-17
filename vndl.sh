@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-VERSION=0.4.2
+VERSION=0.4.3
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.tmp
 bundle_dir=~/.vim/bundle
@@ -156,9 +156,9 @@ function enable_plugin {
 function show_help {
   cat <<EOF
 usage: vndl command [plugin]
-  install   -i    installs a plugin
+  install   -i    install a plugin
   remove    -r    remove a plugin
-  disable   -d    comments out a plugin
+  disable   -d    comment out a plugin
   enable    -e    uncomment out a plugin
   list      -l    list the installed plugins
   sync      -s    call BundleInstall
@@ -186,11 +186,15 @@ for arg in "${@:2}"; do
 
 done
 
-case $cmnd in
-  sync|-s)        bundle_install;;
-  list|-l)        list_plugins;;
-  check|-c)       check;;
-  --version|-v)   show_version;;
-  --help|-h|'')   show_help;;
-  *)              unknown_command;;
-esac
+if [[ "" = "$2" ]]; then
+
+  case $cmnd in
+    sync|-s)        bundle_install;;
+    list|-l)        list_plugins;;
+    check|-c)       check;;
+    --version|-v)   show_version;;
+    --help|-h|'')   show_help;;
+    *)              unknown_command;;
+  esac
+
+fi
