@@ -5,6 +5,9 @@ vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.vndl.tmp
 bundle_dir=~/.vim/bundle
 
+# flags
+FORCE=1
+
 function check {
   local noerrors=true
   if [ ! -e $vimrc_file_path ]; then
@@ -39,7 +42,7 @@ function is_installed {
   local plugin=$1
 
   cat $vimrc_file_path \
-  | grep -E "^\"? ?Plugin\\s+'(http.*/)?$plugin/?'\\s*" \
+  | grep -E "^\"? ?Plugin '(http.*/)?$plugin/?'" \
   > /dev/null
   return $?
 }
@@ -49,7 +52,7 @@ function move_temp_file {
   local original_length=$(wc -l < $vimrc_file_path | bc)
   local new_length=$(wc -l < $vimrc_file_temp_path | bc)
   local expected_length=$(echo "$original_length+$length_diff" | bc)
-  if [[ "$expected_length" = "$new_length" ]]; then
+  if [[ "$FORCE" = "0" ]] || [[ "$expected_length" = "$new_length" ]]; then
     mv $vimrc_file_temp_path $vimrc_file_path
     return $?
   else
@@ -112,7 +115,8 @@ function resolve_plugin {
       cat $vimrc_file_path \
       | grep -Eo "^\"? ?Plugin '([^']+/)?$plugin/?'" \
       | grep -Eo "'.*'" \
-      | grep -Eo "[^']+"
+      | grep -Eo "[^']+" \
+      | sed "1q;d"
       ;;
   esac
 
@@ -124,6 +128,8 @@ function install_plugin {
 
   if [ $plugin = 'vundle' ]; then
     install_vundle
+  elif is_installed $plugin; then
+    echo "$plugin is already installed"
   else
     cat $vimrc_file_path \
     | perl -pe "s|^call vundle#end().+$|Plugin '$plugin'\ncall vundle#end()|" \
@@ -140,17 +146,18 @@ function remove_plugin {
   local full_plugin=$(resolve_plugin $plugin)
   echo removing $full_plugin
 
-  is_installed "$full_plugin" || {
+  if is_installed "$full_plugin" || [ "$FORCE" = "0" ]; then
+    cat $vimrc_file_path \
+    | perl -pe "s|^\"? ?Plugin\\s+'$full_plugin'\\s*\n||" \
+    > $vimrc_file_temp_path \
+    && move_temp_file -1 \
+    || echo 'could not save changes to plugins'
+
+    remove_plugin_dir $full_plugin
+  else
     echo "That plugin doesn't seem to be installed."
-  }
+  fi
 
-  cat $vimrc_file_path \
-  | perl -pe "s|^\"? ?Plugin\\s+'$full_plugin'\\s*\n||" \
-  > $vimrc_file_temp_path \
-  && move_temp_file -1 \
-  || echo 'could not save changes to plugins'
-
-  remove_plugin_dir $full_plugin
 }
 
 function list_plugins {
@@ -188,6 +195,12 @@ function enable_plugin {
   remove_plugin_dir
 }
 
+for arg in $@; do
+  case $arg in
+    -f) FORCE=0;;
+  esac
+done
+
 function show_help {
   cat <<EOF
 usage: vndl command [plugin]
@@ -211,12 +224,18 @@ cmnd=$1
 
 for arg in "${@:2}"; do
 
-  case $cmnd in
-    install|-i)   install_plugin $arg;;
-    remove|-r)    remove_plugin $arg;;
-    disable|-d)   disable_plugin $arg;;
-    enable|-e)    enable_plugin $arg;;
-    resolve|-x)   resolve_plugin $arg;;
+  case $arg in
+    -f) ;;
+    *)
+      case $cmnd in
+        install|-i)   install_plugin $arg;;
+        remove|-r)    remove_plugin  $arg;;
+        disable|-d)   disable_plugin $arg;;
+        enable|-e)    enable_plugin  $arg;;
+        resolve|-x)   resolve_plugin $arg;;
+        installed)    is_installed   $arg && echo 'installed';;
+      esac
+    ;;
   esac
 
 done
