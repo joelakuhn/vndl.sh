@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=0.4.5
+VERSION=0.4.6
 vimrc_file_path=~/.vimrc
 vimrc_file_temp_path=$vimrc_file_path.vndl.tmp
 bundle_dir=~/.vim/bundle
@@ -113,7 +113,7 @@ function resolve_plugin {
       ;;
     *)
       cat $vimrc_file_path \
-      | grep -Eo "^\"? ?Plugin '([^']+/)?$plugin/?'" \
+      | grep -Eo "^\"? ?Plugin '([^']+/)?$plugin/?(.vim)?'" \
       | grep -Eo "'.*'" \
       | grep -Eo "[^']+" \
       | sed "1q;d"
@@ -162,8 +162,8 @@ function remove_plugin {
 
 function list_plugins {
   cat $vimrc_file_path \
-  | grep -oE "^\"? ?Plugin '[^']*'" \
-  | sed "s/\"\\s*Plugin /- /" \
+  | grep -oE "^\"? ?Plugin '[^']*'"    \
+  | sed "s/\"[ \\t]*Plugin[ \\t]*/- /" \
   | sed "s/Plugin //" \
   | sed "s/'//g" \
   | nl
@@ -184,6 +184,10 @@ function disable_plugin {
 function enable_plugin {
   local plugin=$1
   local full_plugin=$(resolve_plugin $plugin)
+  if [ "$full_plugin" = '' ]; then
+    echo "could not locate plugin $plugin"
+    exit
+  fi
   echo enabling $full_plugin
 
   cat $vimrc_file_path \
