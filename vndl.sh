@@ -13,6 +13,15 @@ function check {
   if [ ! -e $vimrc_file_path ]; then
     echo "Your vimrc wasn't found."
     noerrors=false
+  else
+    grep 'call vundle#end()' $vimrc_file_path > /dev/null || {
+      echo 'missing vundle#end() call';
+      noerrors=false
+    }
+    grep 'call vundle#begin()' $vimrc_file_path > /dev/null || {
+      echo 'missing vundle#begin() call';
+      noerrors=false
+    }
   fi
   if [ ! -d $bundle_dir ]; then
     echo "You don't seem to have a bundle directory. Do you have Vundle installed?"
@@ -20,6 +29,10 @@ function check {
   fi
   hash perl 2> /dev/null || {
     echo 'Could not find perl.'
+    noerrors=false
+  }
+  hash git 2> /dev/null || {
+    echo 'Could not find git'
     noerrors=false
   }
   hash sed 2> /dev/null || {
