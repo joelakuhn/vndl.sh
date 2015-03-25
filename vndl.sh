@@ -48,7 +48,8 @@ function check {
 }
 
 function bundle_install {
-  vim +BundleInstall +qall
+  vim -c "set shell=/bin/bash" +BundleInstall +qall
+
 }
 
 function is_installed {
