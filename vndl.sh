@@ -49,7 +49,10 @@ function check {
 
 function bundle_install {
   vim -c "set shell=/bin/bash" +BundleInstall +qall
+}
 
+function bundle_update {
+  vim -c "set shell=/bin/bash" +BundleUpdate +qall
 }
 
 function is_installed {
@@ -241,6 +244,7 @@ function show_version {
 cmnd=$1
 
 for arg in "${@:2}"; do
+  echo $arg
 
   case $arg in
     -f) ;;
@@ -264,6 +268,7 @@ if [[ "" = "$2" ]]; then
     sync|-s)        bundle_install;;
     list|-l)        list_plugins;;
     check|-c)       check;;
+    update|-u)      bundle_update;;
     --version|-v)   show_version;;
     --help|-h|'')   show_help;;
     *)              unknown_command;;
