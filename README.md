@@ -10,9 +10,9 @@ Install Vundle itself.
 
 	vndl install vundle
 
-List Installed Plugins.
+List installed plugins (lists all rc Plugin entries)
 
-  vndl list
+	vndl list
 
 Install the Command-T plugin (adds rc entry and runs BundleInstall)
 	
@@ -24,7 +24,7 @@ Remove Command-T (removes rc entry and bundle)
 
 Remove plugin that is third in the listing
 
-  vndl remove 3
+	vndl remove 3
 
 Disable Command-T (comments out the rc entry)
 
@@ -33,10 +33,6 @@ Disable Command-T (comments out the rc entry)
 Enable Command-T (uncomments the rc entry)
 
 	vndl enable Command-T
-
-List installed plugins (lists all rc Plugin entries)
-
-	vndl list
 
 Download all currently configured plugins (i.e. BundleInstall)
 
